@@ -5,20 +5,23 @@ import { useRouter } from 'next/router'
 import cls from 'classnames'
 
 import styles from '../../styles/coffee-store.module.css'
-import coffeeStoresData from '../../data/coffee-stores.json'
+import { fetchCoffeeStores } from '../../lib/coffee-stores'
 
 export async function getStaticProps({ params }) {
+  const coffeeStores = await fetchCoffeeStores()
+  const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+    return coffeeStore.id.toString() === params.id //dynamic id
+  })
   return {
     props: {
-      coffeeStore: coffeeStoresData.find(
-        (el) => el.id.toString() === params.id
-      ),
+      coffeeStore: findCoffeeStoreById ? findCoffeeStoreById : {},
     }, // will be passed to the page component as props
   }
 }
 
-export function getStaticPaths() {
-  const paths = coffeeStoresData.map((coffeeStore) => {
+export async function getStaticPaths() {
+  const coffeeStores = await fetchCoffeeStores()
+  const paths = coffeeStores.map((coffeeStore) => {
     return {
       params: {
         id: coffeeStore.id.toString(),
@@ -34,7 +37,6 @@ export function getStaticPaths() {
 const CoffeeStore = ({
   coffeeStore: { address, neighbourhood, name, imgUrl },
 }) => {
-  console.log(address, neighbourhood, name, imgUrl)
   const router = useRouter()
 
   if (router.isFallback) {
