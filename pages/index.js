@@ -42,10 +42,22 @@ export default function Home({ coffeeStores }) {
           )
 
           const jsoncoffeeStores = await response.json()
+          const resolved = jsoncoffeeStores.results.map((result, idx) => {
+            const neighborhood = result.location.neighborhood
+            return {
+              id: result.fsq_id,
+              address: result.location.address,
+              name: result.name,
+              neighbourhood: neighborhood?.length > 0 ? neighborhood[0] : '',
+              imgUrl: result.imgUrl
+                ? result.imgUrl
+                : 'https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80',
+            }
+          })
           dispatch({
             type: ACTION_TYPES.SET_COFFEE_STORES,
             payload: {
-              jsoncoffeeStores,
+              resolved,
             },
           })
           setNewCoffeeStoresError('')
@@ -81,20 +93,20 @@ export default function Home({ coffeeStores }) {
         <div className={styles.heroImage}>
           <Image alt='hero' src='/static/hero.png' width={400} height={400} />
         </div>
-        {newCoffeeStores?.results?.length > 0 && (
+        {newCoffeeStores?.resolved?.length > 0 && (
           <div className={styles.sectionWrapper}>
             <h2 className={styles.heading2}>Stores near me</h2>
             <div className={styles.cardLayout}>
-              {newCoffeeStores.results.map((coffeeStore) => {
+              {newCoffeeStores.resolved.map((coffeeStore) => {
                 return (
                   <Card
-                    key={coffeeStore.fsq_id}
+                    key={coffeeStore.id}
                     name={coffeeStore.name}
                     imgUrl={
                       coffeeStore.imgUrl ||
                       'https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80'
                     }
-                    href={`/coffee-store/${coffeeStore.fsq_id}`}
+                    href={`/coffee-store/${coffeeStore.id}`}
                     className={styles.card}
                   />
                 )

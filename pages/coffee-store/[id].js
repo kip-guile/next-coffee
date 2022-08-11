@@ -56,18 +56,16 @@ const CoffeeStore = (initialProps) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          id: coffeeStore.fsq_id,
+          id: coffeeStore.id,
           name: coffeeStore.name,
           voting: 0,
           imgUrl:
             coffeeStore.imgUrl ||
             'https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80',
-          neigbourhood: coffeeStore.location.neighborhood
-            ? coffeeStore.location.neighborhood[0]
+          neigbourhood: coffeeStore.neighbourhood
+            ? coffeeStore.neighbourhood[0]
             : '',
-          address: coffeeStore.location.formatted_address
-            ? coffeeStore.location.formatted_address
-            : '',
+          address: coffeeStore.address ? coffeeStore.address : '',
         }),
       })
 
@@ -79,11 +77,11 @@ const CoffeeStore = (initialProps) => {
 
   useEffect(() => {
     if (isEmpty(initialProps.coffeeStore)) {
-      if (newCoffeeStores && newCoffeeStores.results) {
-        if (newCoffeeStores.results.length > 0) {
-          const findCoffeeStoreById = newCoffeeStores.results.find(
+      if (newCoffeeStores && newCoffeeStores.resolved) {
+        if (newCoffeeStores.resolved.length > 0) {
+          const findCoffeeStoreById = newCoffeeStores.resolved.find(
             (coffeeStore) => {
-              return coffeeStore.fsq_id.toString() === id //dynamic id
+              return coffeeStore.id.toString() === id //dynamic id
             }
           )
           setCoffeeStore(findCoffeeStoreById)

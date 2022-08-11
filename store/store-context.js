@@ -13,7 +13,7 @@ const storeReducer = (state, action) => {
       return { ...state, latLong: action.payload.latLong }
     }
     case ACTION_TYPES.SET_COFFEE_STORES: {
-      return { ...state, newCoffeeStores: action.payload.jsoncoffeeStores }
+      return { ...state, newCoffeeStores: action.payload }
     }
     default:
       throw new Error(`Unhandled action type: ${action.type}`)
