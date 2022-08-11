@@ -1,11 +1,15 @@
+import { useContext, useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Head from 'next/head'
 import { useRouter } from 'next/router'
+import useSWR from 'swr'
 import cls from 'classnames'
 
 import styles from '../../styles/coffee-store.module.css'
 import { fetchCoffeeStores } from '../../lib/coffee-stores'
+import { StoreContext } from '../../store/store-context'
+import { fetcher, isEmpty } from '../../utils'
 
 export async function getStaticProps({ params }) {
   const coffeeStores = await fetchCoffeeStores()
@@ -34,14 +38,108 @@ export async function getStaticPaths() {
   }
 }
 
-const CoffeeStore = ({
-  coffeeStore: { address, neighbourhood, name, imgUrl },
-}) => {
+const CoffeeStore = (initialProps) => {
   const router = useRouter()
+  const id = router.query.id
+
+  const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore || {})
+
+  const {
+    state: { newCoffeeStores },
+  } = useContext(StoreContext)
+
+  const handleCreateCoffeeStore = async (coffeeStore) => {
+    try {
+      const response = await fetch('/api/createCoffeeStore', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: coffeeStore.fsq_id,
+          name: coffeeStore.name,
+          voting: 0,
+          imgUrl:
+            coffeeStore.imgUrl ||
+            'https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80',
+          neigbourhood: coffeeStore.location.neighborhood[0] || '',
+          address: coffeeStore.location.formatted_address || '',
+        }),
+      })
+
+      const dbCoffeeStore = await response.json()
+    } catch (err) {
+      console.error('Error creating coffee store', err)
+    }
+  }
+
+  useEffect(() => {
+    if (isEmpty(initialProps.coffeeStore)) {
+      if (newCoffeeStores && newCoffeeStores.results) {
+        if (newCoffeeStores.results.length > 0) {
+          const findCoffeeStoreById = newCoffeeStores.results.find(
+            (coffeeStore) => {
+              return coffeeStore.fsq_id.toString() === id //dynamic id
+            }
+          )
+          setCoffeeStore(findCoffeeStoreById)
+          handleCreateCoffeeStore(findCoffeeStoreById)
+        }
+      }
+    } else {
+      // SSG
+      handleCreateCoffeeStore(initialProps.coffeeStore)
+    }
+  }, [id, initialProps.coffeeStore, newCoffeeStores])
+
+  const {
+    name = '',
+    address = '',
+    neighbourhood = '',
+    imgUrl = '',
+  } = coffeeStore
+  const [votingCount, setVotingCount] = useState(0)
+
+  const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher)
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setCoffeeStore(data[0])
+      setVotingCount(data[0].voting)
+    }
+  }, [data])
 
   if (router.isFallback) {
     return <div>Loading...</div>
   }
+
+  const handleUpvoteButton = async () => {
+    try {
+      const response = await fetch('/api/favoriteCoffeeStoreById', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+        }),
+      })
+
+      const dbCoffeeStore = await response.json()
+
+      if (dbCoffeeStore && dbCoffeeStore.length > 0) {
+        let count = votingCount + 1
+        setVotingCount(count)
+      }
+    } catch (err) {
+      console.error('Error upvoting the coffee store', err)
+    }
+  }
+
+  if (error) {
+    return <div>Something went wrong retrieving coffee store page</div>
+  }
+
   return (
     <div className={styles.layout}>
       <Head>
@@ -100,10 +198,10 @@ const CoffeeStore = ({
               height='24'
               alt='star icon'
             />
-            <p className={styles.text}>5</p>
+            <p className={styles.text}>{votingCount}</p>
           </div>
 
-          <button className={styles.upvoteButton} onClick={() => {}}>
+          <button className={styles.upvoteButton} onClick={handleUpvoteButton}>
             Up vote!
           </button>
         </div>
