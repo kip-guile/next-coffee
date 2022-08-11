@@ -1,8 +1,9 @@
 import { useContext, useState, useEffect } from 'react'
+import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Image from 'next/image'
 import Head from 'next/head'
-import { useRouter } from 'next/router'
+
 import useSWR from 'swr'
 import cls from 'classnames'
 
@@ -38,11 +39,11 @@ export async function getStaticPaths() {
   }
 }
 
-const CoffeeStore = (initialProps) => {
+const CoffeeStore = (props) => {
   const router = useRouter()
   const id = router.query.id
 
-  const [coffeeStore, setCoffeeStore] = useState(initialProps.coffeeStore || {})
+  const [coffeeStore, setCoffeeStore] = useState(props.coffeeStore || {})
 
   const {
     state: { newCoffeeStores },
@@ -76,7 +77,7 @@ const CoffeeStore = (initialProps) => {
   }
 
   useEffect(() => {
-    if (isEmpty(initialProps.coffeeStore)) {
+    if (isEmpty(props.coffeeStore)) {
       if (newCoffeeStores && newCoffeeStores.resolved) {
         if (newCoffeeStores.resolved.length > 0) {
           const findCoffeeStoreById = newCoffeeStores.resolved.find(
@@ -90,9 +91,9 @@ const CoffeeStore = (initialProps) => {
       }
     } else {
       // SSG
-      handleCreateCoffeeStore(initialProps.coffeeStore)
+      handleCreateCoffeeStore(props.coffeeStore)
     }
-  }, [id, initialProps.coffeeStore, newCoffeeStores])
+  }, [id, props.coffeeStore, newCoffeeStores])
 
   const {
     name = '',
@@ -110,10 +111,6 @@ const CoffeeStore = (initialProps) => {
       setVotingCount(data[0].voting)
     }
   }, [data])
-
-  if (router.isFallback) {
-    return <div>Loading...</div>
-  }
 
   const handleUpvoteButton = async () => {
     try {
@@ -140,6 +137,10 @@ const CoffeeStore = (initialProps) => {
 
   if (error) {
     return <div>Something went wrong retrieving coffee store page</div>
+  }
+
+  if (router.isFallback) {
+    return <div>Loading...</div>
   }
 
   return (

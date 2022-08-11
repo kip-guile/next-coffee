@@ -1,35 +1,28 @@
 import Document, { Html, Head, Main, NextScript } from 'next/document'
-import Link from 'next/link'
 
 class MyDocument extends Document {
   render() {
     return (
       <Html lang='en'>
         <Head>
-          <Link
+          <link
             rel='preload'
             href='/fonts/Nunito-Bold.ttf'
             as='font'
             crossOrigin='anonymous'
-          >
-            <a></a>
-          </Link>
-          <Link
+          ></link>
+          <link
             rel='preload'
             href='/fonts/Nunito-Regular.ttf'
             as='font'
             crossOrigin='anonymous'
-          >
-            <a></a>
-          </Link>
-          <Link
+          ></link>
+          <link
             rel='preload'
             href='/fonts/Nunito-Regular.ttf'
             as='font'
             crossOrigin='anonymous'
-          >
-            <a></a>
-          </Link>
+          ></link>
         </Head>
         <body>
           <Main></Main>

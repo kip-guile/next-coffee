@@ -1,14 +1,29 @@
+import { useEffect, useState, useContext } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
+import styles from '../styles/Home.module.css'
+
 import Banner from '../components/banner'
 import Card from '../components/card'
-import styles from '../styles/Home.module.css'
+
 import { fetchCoffeeStores } from '../lib/coffee-stores'
 import useTrackLocation from '../hooks/use-track-location'
-import { useEffect, useState, useContext } from 'react'
 import { ACTION_TYPES, StoreContext } from '../store/store-context'
 
 export async function getStaticProps(context) {
+  if (
+    !process.env.NEXT_PUBLIC_FOURSQUARE &&
+    !process.env.NEXT_AIRTABLE_API_KEY &&
+    !process.env.NEXT_AIRTABLE_BASE_KEY &&
+    !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+  ) {
+    return {
+      redirect: {
+        destination: '/problem',
+        permanent: false,
+      },
+    }
+  }
   const coffeeStores = await fetchCoffeeStores()
   return {
     props: {
@@ -17,7 +32,7 @@ export async function getStaticProps(context) {
   }
 }
 
-export default function Home({ coffeeStores }) {
+export default function Home(props) {
   const { handleTrackLocation, locationErrorMsg, isFindingLocation } =
     useTrackLocation()
   const [newCoffeeStoresError, setNewCoffeeStoresError] = useState(null)
@@ -27,7 +42,7 @@ export default function Home({ coffeeStores }) {
   const { newCoffeeStores, latLong } = state
 
   useEffect(() => {
-    async function fetchData() {
+    async function setCoffeeStoreByLocation() {
       if (latLong) {
         try {
           const response = await fetch(
@@ -67,7 +82,7 @@ export default function Home({ coffeeStores }) {
         }
       }
     }
-    fetchData()
+    setCoffeeStoreByLocation()
   }, [dispatch, latLong])
 
   const handleOnBannerClick = () => {
@@ -115,11 +130,11 @@ export default function Home({ coffeeStores }) {
           </div>
         )}
 
-        {coffeeStores && coffeeStores.length > 0 && (
+        {props.coffeeStores && props.coffeeStores.length > 0 && (
           <div className={styles.sectionWrapper}>
             <h2 className={styles.heading2}>Toronto stores</h2>
             <div className={styles.cardLayout}>
-              {coffeeStores.map((coffeeStore) => {
+              {props.coffeeStores.map((coffeeStore) => {
                 return (
                   <Card
                     key={coffeeStore.id}
